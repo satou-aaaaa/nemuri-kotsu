@@ -109,8 +109,8 @@
         const S = [["小学生", 9, 12], ["中学生", 8, 10], ["高校生", 8, 10]], wi = ri(R, 0, S.length - 1), [w, lo, hi] = S[wi];
         const gh = ri(R, lo, hi), bh = ri(R, lo - 3, lo - 2), si = ri(R, 0, 2);
         const q = [`${w}の毎日の睡眠時間。`, `${w}が夜ふかしするか考えている。`, `${w}の平日の眠り方。`][si] + "　よく眠れるのはどっち？";
-        const g = `毎日${gh}時間ほど眠る`, b = `毎日${bh}時間ほど眠る`;
-        return { type: "act", media: w, q, opts: shuffle(R, [g, b]), ans: g, rev: false, v: `${wi}:${si}:${gh}:${bh}:0` };
+        const g = `毎日${gh}時間ほど眠る`, b = `毎日${bh}時間ほど眠る`, rev = R() < 0.25; // ほかのふつうと同じく、4回に1回は逆に聞く（nemuri-kotsu#1 の CodeRabbit）
+        return { type: "act", media: w, q: rev ? q.replace("よく眠れるのはどっち？", "よくないのはどっち？") : q, opts: shuffle(R, [g, b]), ans: rev ? b : g, rev, v: `${wi}:${si}:${gh}:${bh}:${rev ? 1 : 0}` };
       } },
     // ---- むずかしい ----
     { id: "nezake", lv: 2, grp: "yoru", name: "寝酒", src: ["korei"],

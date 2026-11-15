@@ -57,7 +57,7 @@ const KH = { 小学生: [9, 12], 中学生: [8, 10], 高校生: [8, 10] };
   const total = Object.values(seen).reduce((a, s) => a + s.size, 0), few = G.KINDS.filter((k) => seen[k.id].size < 30).map((k) => `${k.id}:${seen[k.id].size}`);
   check("問題の数：全部で300通り以上・どの種類も30通り以上（好きなだけ遊んでも同じ問題が続かない。game-dev.md F6）", total >= 300 && few.length === 0, `${total}通り ${few.join(",")}`);
   check("問題：種類は15（やさしい4・ふつう5・むずかしい6）", G.KINDS.length === 15 && [0, 1, 2].map((l) => G.kindsOf(l).length).join() === "4,5,6");
-  check("逆に聞く問い（よくないのはどっち？）が、ふつう・むずかしいに出る", G.KINDS.filter((k) => k.lv > 0 && k.id !== "kodomo").every((k) => { for (let i = 0; i < 200; i++) if (G.make(`${k.id}|rv${i}`).rev) return true; return false; }));
+  check("逆に聞く問い（よくないのはどっち？）が、ふつう・むずかしいのどの種類にも出る", G.KINDS.filter((k) => k.lv > 0).every((k) => { for (let i = 0; i < 200; i++) if (G.make(`${k.id}|rv${i}`).rev) return true; return false; }));
   const longWhy = [], longLook = [], longOpt = [];
   for (const k of G.KINDS) { if ([...k.why].length > 80) longWhy.push(k.id); if ([...k.look].length > 40 || [...k.key].length > 40) longLook.push(k.id); for (let s = 0; s < 200; s++) { const P = G.make(`${k.id}|len${s}`); for (const o of [...P.opts, P.q]) if ([...o].length > 45) longOpt.push(`${k.id}:${o}`); } }
   check("説明は80字以内・ヒントは40字以内・1行は45字以内（やさしい日本語。一文を短く）", !longWhy.length && !longLook.length && !longOpt.length, longWhy.concat(longLook, longOpt.slice(0, 3)).join(","));
@@ -95,7 +95,8 @@ check("乱数は sort の比較の中で引かない（ブラウザで引く回�
 { const inl = html.split("<script>").slice(1).map((x) => x.split("</" + "script>")[0]).join("\n"); // index.html の中の script も見る（nemuri-kotsu#1 で行の途中に // を入れて画面が動かなくなった）
   check("一行の式の途中にコメント // を足さない（行の残りが消える。rosen-hitofude 2026-11-04・nemuri-kotsu#1）", !/;\s*\/\/[^\n]*;\s*\w/.test((gen + "\n" + inl).split("\n").filter((l) => !l.trim().startsWith("//")).join("\n"))); }
 check("言い方：「必ず眠れる」「治る」と言い切らない", !/安全です|必ず眠れ|かならず眠れ|治りま|治る|効果があります/.test(html + gen + readme));
-check("言い方：「このゲームについて」と遊び方に、医療の助言・公式の情報の代わりではないこと・続くときは医師に相談することがある", /公式の情報の代わりではありません/.test(html) && /医療の助言ではありません/.test(html) && (html.match(/医師に相談/g) || []).length >= 2 && /代わりではありません/.test(readme) && /医師/.test(readme));
+{ const howto = (html.match(/<dialog id="howto"[\s\S]*?<\/dialog>/) || [""])[0], ab = (html.match(/function about\(\)[\s\S]*?\n}/) || [""])[0], dis = (t) => /医療の助言/.test(t) && /公式の情報の代わりではありません/.test(t) && /医師に相談/.test(t);
+  check("言い方：遊び方・「このゲームについて」・README のどれにも、医療の助言・公式の情報の代わりではないこと・続くときは医師に相談することがある（画面ごとに見る。nemuri-kotsu#1 の CodeRabbit）", dis(howto) && dis(ab) && /医療の助言/.test(readme) && /代わりではありません/.test(readme) && /医師/.test(readme), `遊び方 ${dis(howto)}・について ${dis(ab)}`); }
 check("写し元（雲の名前あて・噴火警戒レベルよみ）の言葉が残っていない（game-dev.md A 手順5）", !/雲|空の絵|気象|雷|大雨|噴火|火山|警戒レベル|kumo|上層|下層|高さのなかま/.test(html + gen + readme));
 check("画面にお笑いの言葉を入れない（本物っぽく）", !/お笑い|ギャグ|ツッコミ|なんでやねん|（うそ）/.test(html + gen));
 check("引き継ぎ：transfer.js をゲームの script より前に、このゲームの記録のキー（記録・文字・復習）だけで読む・depth.js も前に読む", /<script src="transfer\.js" data-game="nemuri-kotsu" data-keys="nmk-v1,nmk-fs,nmk-depth"><\/script>\s*<script src="depth\.js" data-game="nemuri-kotsu" data-key="nmk-depth"><\/script>\s*<\/head>/.test(html) && html.indexOf('src="transfer.js"') < html.indexOf('src="data.js"') && /data-hk/.test(html) && existsSync(path.join(root, "transfer.js")));
